@@ -34,9 +34,9 @@ class LabseqStrategyTest {
     @Test
     void testBatchedStrategy() {
         BatchedLabseqStrategy strategy = new BatchedLabseqStrategy();
-        BigInteger result = strategy.calculate(1000);
+        BigInteger result = strategy.calculate(10000);
         assertNotNull(result);
-        System.out.println("Batched Result (1000): " + result);
+        System.out.println("Batched Result (10000): " + result);
     }
 
     @Test
@@ -44,7 +44,7 @@ class LabseqStrategyTest {
         SegmentedLabseqStrategy strategy = new SegmentedLabseqStrategy();
         BigInteger result = strategy.calculate(100_000);
         assertNotNull(result);
-        System.out.println("Segmented Result (200000): " + result);
+        System.out.println("Segmented Result (100000): " + result);
     }
 
     @Test

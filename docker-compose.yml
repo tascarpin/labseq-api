@@ -1,0 +1,11 @@
+version: "3.9"
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: labseq-api
+    image: labseq-api
+    ports:
+      - "8080:8080"
