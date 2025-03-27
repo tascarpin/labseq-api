@@ -4,7 +4,6 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Named;
 import org.altice.labseq.domain.LabseqStrategy;
 import org.altice.labseq.util.LabseqCache;
-import org.altice.labseq.util.LabseqHelper;
 
 import java.math.BigInteger;
 import java.util.*;
@@ -30,11 +29,11 @@ public class SegmentedLabseqStrategy implements LabseqStrategy {
         ExecutorService executor = Executors.newFixedThreadPool(THREAD_POOL_SIZE);
         List<Future<?>> tasks = new ArrayList<>();
 
-        // Usa fallback para garantir os últimos 4 valores
-        BigInteger l0 = LabseqHelper.getOrCompute(lastCached - 3, cache);
-        BigInteger l1 = LabseqHelper.getOrCompute(lastCached - 2, cache);
-        BigInteger l2 = LabseqHelper.getOrCompute(lastCached - 1, cache);
-        BigInteger l3 = LabseqHelper.getOrCompute(lastCached, cache);
+        // Últimos 4 valores conhecidos
+        BigInteger l0 = cache.get(lastCached - 3);
+        BigInteger l1 = cache.get(lastCached - 2);
+        BigInteger l2 = cache.get(lastCached - 1);
+        BigInteger l3 = cache.get(lastCached);
 
         for (int block = 0; block < totalBlocks; block++) {
             final long start = firstToCompute + block * BLOCK_SIZE;
@@ -53,17 +52,11 @@ public class SegmentedLabseqStrategy implements LabseqStrategy {
 
                 for (long i = start; i <= end; i++) {
                     BigInteger result = a.add(b);
-                    cache.put(i, result); // grava direto no cache global
+                    cache.put(i, result);
                     a = b;
                     b = c;
                     c = d;
                     d = result;
-
-                    // Limpeza leve de cache (opcional)
-                    if (i % 10_000 == 0) {
-                        long finalI = i;
-                        cache.keySet().removeIf(k -> k < finalI - 100_000);
-                    }
                 }
                 return null;
             });
@@ -72,10 +65,10 @@ public class SegmentedLabseqStrategy implements LabseqStrategy {
 
             // Atualiza os últimos 4 valores do final do bloco para a próxima iteração
             long tail = Math.max(end - 3, start);
-            l0 = LabseqHelper.getOrCompute(tail, cache);
-            l1 = LabseqHelper.getOrCompute(tail + 1, cache);
-            l2 = LabseqHelper.getOrCompute(tail + 2, cache);
-            l3 = LabseqHelper.getOrCompute(tail + 3, cache);
+            l0 = cache.get(tail);
+            l1 = cache.get(tail + 1);
+            l2 = cache.get(tail + 2);
+            l3 = cache.get(tail + 3);
         }
 
         // Aguarda todas as threads terminarem
